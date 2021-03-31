@@ -1,3 +1,7 @@
-# caltech-ee148-spring2020-hw01
+# Homework 1: Red Light Detection
 
-The link to the instructions is available on Piazza.
+### What I tried:
+
+#### HSV Filtering
+
+Search for pixels that meet a threshold of brightness and red-ness, then take a bounding box of clusters of valid pixels.
