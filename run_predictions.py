@@ -1,7 +1,11 @@
 import os
 import numpy as np
 import json
+
 from PIL import Image
+
+from util import load_filters, binary_dilation, get_boxes, printProgressBar
+from strategies import correlate_strategy, threshold_strategy
 
 
 def detect_red_light(I):
@@ -26,27 +30,29 @@ def detect_red_light(I):
     BEGIN YOUR CODE
     '''
 
-
+    corr, proc_img = correlate_strategy(I, filters)
+    mask = binary_dilation((corr > 0.83), iterations=5)
+    bounding_boxes = get_boxes(mask)
     
     '''
     As an example, here's code that generates between 1 and 5 random boxes
     of fixed size and returns the results in the proper format.
     '''
     
-    box_height = 8
-    box_width = 6
+    # box_height = 8
+    # box_width = 6
     
-    num_boxes = np.random.randint(1,5) 
+    # num_boxes = np.random.randint(1,5) 
     
-    for i in range(num_boxes):
-        (n_rows,n_cols,n_channels) = np.shape(I)
+    # for i in range(num_boxes):
+    #     (n_rows,n_cols,n_channels) = np.shape(I)
         
-        tl_row = np.random.randint(n_rows - box_height)
-        tl_col = np.random.randint(n_cols - box_width)
-        br_row = tl_row + box_height
-        br_col = tl_col + box_width
+    #     tl_row = np.random.randint(n_rows - box_height)
+    #     tl_col = np.random.randint(n_cols - box_width)
+    #     br_row = tl_row + box_height
+    #     br_col = tl_col + box_width
         
-        bounding_boxes.append([tl_row,tl_col,br_row,br_col]) 
+    #     bounding_boxes.append([tl_row,tl_col,br_row,br_col]) 
     
     '''
     END YOUR CODE
@@ -58,7 +64,7 @@ def detect_red_light(I):
     return bounding_boxes
 
 
-if __name__=='__main_':
+if __name__=='__main__':
     # set the path to the downloaded data: 
     data_path = 'data/RedLights2011_Medium'
 
@@ -72,8 +78,13 @@ if __name__=='__main_':
     # remove any non-JPEG files: 
     file_names = [f for f in file_names if '.jpg' in f] 
 
+    # Red-light filter setup
+    filters, compound_filter = load_filters('red-lights/balance')
+
+    n = len(file_names)
     preds = {}
-    for i in range(len(file_names)):
+    printProgressBar(0, len(file_names), prefix='Progress:', suffix='Complete', length=50)
+    for i in range(n):
         
         # read image using PIL:
         I = Image.open(os.path.join(data_path,file_names[i]))
@@ -82,6 +93,13 @@ if __name__=='__main_':
         I = np.asarray(I)
         
         preds[file_names[i]] = detect_red_light(I)
+
+        # Intermediate saves just incase
+        if i % 10 == 0:
+            with open(os.path.join(preds_path,'preds_{}.json'.format(i)),'w') as f:
+                json.dump(preds,f)
+                
+        printProgressBar(i, n, prefix='Progress:', suffix='Complete', length=50)
 
     # save preds (overwrites any previous predictions!)
     with open(os.path.join(preds_path,'preds.json'),'w') as f:
