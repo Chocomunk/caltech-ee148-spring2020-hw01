@@ -95,7 +95,7 @@ if __name__=='__main__':
         preds[file_names[i]] = detect_red_light(I)
 
         # Intermediate saves just incase
-        if i % 10 == 0:
+        if i % 50 == 0:
             with open(os.path.join(preds_path,'preds_{}.json'.format(i)),'w') as f:
                 json.dump(preds,f)
                 
